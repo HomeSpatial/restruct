@@ -1,4 +1,4 @@
-include README.md LICENSE NOTICE THIRD_PARTY_NOTICES.md pyproject.toml
+include README.md README.zh-CN.md LICENSE NOTICE THIRD_PARTY_NOTICES.md pyproject.toml
 recursive-include src/indoor_recon *.py *.json *.js *.html *.css LICENSE
 prune blender
 prune cases

@@ -1,56 +1,68 @@
-# 重建结果与证据查看器
+<a id="重建结果与证据查看器"></a>
+
+# Reconstruction and evidence viewer
+
+[English](viewer.md) | [简体中文](viewer.zh-CN.md)
 
 ```bash
 restruct view artifacts --port 8770
 ```
 
-打开服务地址后，有 `prepare/prepared.json` 的任务会进入分层工作区。左侧选择任务；也可用 `?task=jobs/task` 指定相对于服务根目录的路径。如果服务根目录就是任务本身，使用 `?task=.`。没有准备数据的目录继续使用 GLB 文件浏览；`?legacy=1` 可显式进入文件浏览。
+After opening the server URL, tasks containing `prepare/prepared.json` enter the layered workspace. Select a task on the left or use `?task=jobs/task` relative to the server root. If the server root is the task itself, use `?task=.`. Directories without prepared data use the GLB file browser; `?legacy=1` explicitly selects it.
 
-任务位于服务目录以外，或感知数据与模型历史分开保存时，在服务根下添加 `viewer-tasks.local.json`，显式登记本机路径。例如：
+If a task lives outside the served directory, or perception data and model history are stored separately, explicitly register local paths in `viewer-tasks.local.json` under the server root. For example:
 
 ```json
-{"tasks":[{"id":"@latest-clean","name":"11/06 清理版 · Sol high","task_dir":"E:/results/clean/task","models_dir":"E:/results/clean/history"}]}
+{"tasks":[{"id":"@latest-clean","name":"11/06 clean run · Sol high","task_dir":"E:/results/clean/task","models_dir":"E:/results/clean/history"}]}
 ```
 
-`id` 使用 `@` 加字母、数字、短横线或下划线。路径可为绝对路径或相对配置文件的路径；`models_dir` 省略时使用任务目录。访问 `?task=%40latest-clean` 即可查看原任务的实时构建版本，照片和候选仍来自登记的任务。通用文件访问仅扩展到显式登记的模型目录，不能通过 URL 指定任意外部目录。该本机配置不应随发行包发布。
+An `id` starts with `@` followed by letters, digits, hyphens or underscores. Paths can be absolute or relative to the configuration file. If omitted, `models_dir` defaults to the task directory. Open `?task=%40latest-clean` to follow that task's live builds while keeping photos/proposals from the registered task. General file access extends only to explicitly registered model directories; URLs cannot name arbitrary external directories. Do not distribute this local configuration in release packages.
 
-## 四层对照
+<a id="四层对照"></a>
 
-| 图层 | 内容 | 使用方式 |
+## Compare four layers
+
+| Layer | Contents | Controls |
 | --- | --- | --- |
-| 扫描参考 | evidence 声明的原始 GLB；无支持的 GLB 时使用预处理点云 | 首次勾选时加载。点云最多预览 8 万点并标明降采样；原始 GLB 保留全部网格 |
-| SpatialLM 布局 | 墙、门、窗等布局候选 | 显隐、透明度、类别及楼层筛选、候选点选、分区来源、生成截断和复核记录 |
-| Boxer 物体 | 融合物体框，或所选帧的原始检测 | 按类别、分数和来源帧数筛选；选择对象后查看对应照片和二维检测框 |
-| 结构模型 | 成功构建的 GLB 快照 | 整体对象与部件树、版本选择、剖开墙体、按高度剖切、线框和聚焦 |
+| Scan reference | Original GLB declared by evidence, or the prepared point cloud if no supported GLB exists | Loads on first selection; point previews are limited to 80,000 points and labeled as downsampled; original GLBs retain all meshes |
+| SpatialLM layout | Layout proposals such as walls, doors and windows | Visibility, opacity, category/floor filters, selection, partition provenance, generation truncation and review records |
+| Boxer objects | Fused object boxes or raw detections from a selected frame | Filter by category, score and source-frame count; inspect matching photos and 2D boxes after selection |
+| Structural model | Successful GLB build snapshots | Whole objects and part trees, revision selection, wall cutaways, height clipping, wireframe and focus |
 
-四层分别控制显隐和透明度；默认显示最新结构模型。两种识别结果标为“候选 · 待核实”。SpatialLM 不生成虚构的置信度；零厚度墙面保持为面。Boxer 的融合分数、原始 3D 分数以及照片下方的 2D/3D 分数分别展示，均不代表几何精度。
+Each layer has independent visibility/opacity controls. The latest structural model is shown by default. Both perception outputs are labeled as proposals awaiting verification. SpatialLM confidence is not invented, and zero-thickness walls remain surfaces. Boxer fusion scores, raw 3D scores and photo-panel 2D/3D scores are displayed separately; none is a geometric-accuracy measure.
 
-鼠标按实际模型或候选框表面点选，装饰线框不扩大命中区域。多层叠加时优先选择右侧当前页签对应图层中最近的命中对象；该图层未命中时选择其他可见图层中最近的对象。选中框沿原候选的旋转方向绘制；结构对象高亮实际部件边缘。边框采用固定 3 像素亮线和暗色衬边，缩放时保持清晰。
+Mouse selection hits actual model or proposal-box surfaces; decorative wireframes do not enlarge hit areas. With overlapping layers, the nearest object in the layer associated with the active right-hand tab takes priority. If that layer has no hit, the nearest object in another visible layer is selected. Proposal outlines retain their rotations, while structural highlights follow actual part edges. A fixed three-pixel bright line with a dark backing stays visible when zooming.
 
-候选、预处理点云使用 Z 向上的米制工作坐标；扫描使用 evidence 的缩放和变换；结构 GLB 使用导出的 `T_work_from_gltf`。统一转换到查看器 Y 向上的米制场景。网格间距为 1 m。候选所属楼层优先使用保存的 `floor_id`，其余按预处理楼层分界和对象中心高度归类；跨层构件的楼层标签仅用于筛选。扫描保持完整，可使用高度剖切查看内部。
+Proposals and prepared points use Z-up metric working coordinates. Scans use evidence scale/transforms, and structural GLBs use exported `T_work_from_gltf`. All are converted into the viewer's Y-up metric scene, with a 1 m grid. Proposal floors use saved `floor_id` first; otherwise they are inferred from preparation floor boundaries and object-center heights. Floor labels on cross-floor components are filters only. Scans remain complete and can be clipped by height to inspect interiors.
 
-结构对象优先按 `hs_parent_id` 和参数模型 assembly 合并。缺少父对象的旧结果只在同一 ID 路径下的直接部件类别一致时按路径分组，并显示“按 ID 路径分组”；该分组不是已经确认的实物数量。对象详情可展开部件，明确区分对象/命名组数与网格部件数。
+Structural objects are grouped preferentially by `hs_parent_id` and parameter-model assemblies. Legacy results without parents are grouped by ID path only when direct part categories within the same path agree, and are labeled accordingly. This does not establish a confirmed count of physical objects. Expand parts in object details to distinguish object/named-group counts from mesh-part counts.
 
-## 照片与逐帧结果
+<a id="照片与逐帧结果"></a>
 
-选择融合物体后，通过来源帧下拉框查看照片。二维框严格通过融合结果保存的 `detection_ids` 关联，不按类别或近似位置猜测。老结果没有关联 ID 时仍显示照片，并说明无法对应二维框。结构对象已有预测来源和帧记录时，也可查看来源照片。
+## Photographs and per-frame results
 
-Boxer 面板中切换“逐帧原始检测”，可查看尚未融合的检查点。只读取 `units.json` 已记录且哈希匹配的帧；对应照片必须是任务声明的标定帧。照片按需加载，缺失或哈希变化会显示错误。
+After selecting a fused object, choose a source frame to view its photo. 2D boxes are associated strictly through saved `detection_ids`, not guessed from class or approximate location. Legacy results without IDs still show the photo and explain that the 2D box cannot be matched. Structural objects with prediction provenance and frame records can also show source photos.
 
-## 版本与进行中的任务
+Switch the Boxer panel to raw per-frame detections to inspect checkpoints before fusion. Only frames recorded in `units.json` with matching hashes are read, and their photos must be declared calibrated task frames. Photos load on demand; missing or changed hashes produce an error.
 
-底部集中显示结构版本和“跟随最新结果”。工作区每 4 秒轮询一次；隐藏标签页暂停轮询。手动选择旧版会取消自动跟随，重新勾选后转到最新成功版本并保留观察视角。重复构建、重开验证按 revision 合并。没有 GLB 时也能检查识别候选和扫描。
+<a id="版本与进行中的任务"></a>
 
-布局分区、Boxer 帧数和融合候选分别显示状态。检查点只能证明部分结果已保存，不能证明进程仍在运行，因此使用“已有部分检查点”而非“正在推理”。SpatialLM 只读取连续完成的分区；Boxer 融合结果仅在完整阶段提交后出现。
+## Revisions and tasks in progress
 
-后端验证 prepared 身份和已提交结果的哈希，拒绝跨预处理快照或已改写的候选。服务根以外只允许读取任务明确声明且位于绑定根以内的扫描、照片，以及本机配置显式登记的模型目录；通用文件地址限制在服务根或对应登记目录内。默认监听 `127.0.0.1`，查看操作不会修改任务或重新触发推理。
+The bottom bar groups revision selection and follow-latest controls. The workspace polls every four seconds and pauses polling in hidden tabs. Manually selecting an older revision disables following. Re-enable it to load the newest successful revision while retaining the view. Repeated builds/reopen validations are grouped by revision. Scans and proposals can be inspected before a GLB exists.
 
-## 兼容入口
+Layout partitions, Boxer frame counts and fused proposals have separate status displays. Checkpoints prove that partial results were saved, not that a process is still running; the UI describes saved partial checkpoints rather than claiming active inference. SpatialLM reads only consecutively completed partitions. Boxer fusion results appear only after the full stage is committed.
 
-- `?legacy=1`：原 GLB 文件列表、拖放、第二模型对比。
-- `?follow=.`：有 prepared 数据时进入任务工作区；纯模型目录保留原 2 秒构建跟随。
-- `?legacy=1&follow=.`：原构建跟随与变更淡入淡出。
-- `?replay=.&hold=4`：原版本顺序回放。
-- `?process=path/to/timeline.json`：原证据和说明过程回放。
+The backend validates prepared-data identity and committed-result hashes, rejecting proposals from different preparation snapshots or modified files. Outside the server root it reads only scans/photos explicitly declared by the task within bound roots, and model directories explicitly registered in local configuration. Generic file URLs stay inside the server root or the matching registered directory. The default listener is `127.0.0.1`. Viewing neither modifies tasks nor retriggers inference.
 
-左右面板可通过顶部按钮折叠，拖动面板与视图之间的分隔线调整宽度，双击分隔线复原；分隔线聚焦后也可用左右方向键调整。选择候选/对象后双击或按 F 聚焦，Esc 清除选择。查看器改善了资源释放，但没有承诺或测量 GPU 性能收益。
+<a id="兼容入口"></a>
+
+## Compatibility entry points
+
+- `?legacy=1`: original GLB file list, drag-and-drop and second-model comparison.
+- `?follow=.`: task workspace when prepared data exists; original two-second build following for model-only directories.
+- `?legacy=1&follow=.`: original build following and change fades.
+- `?replay=.&hold=4`: original sequential revision replay.
+- `?process=path/to/timeline.json`: original evidence/commentary process replay.
+
+Collapse either side panel with the top buttons. Drag the divider to resize, double-click it to reset, or use left/right arrows when it has focus. Double-click a selected object/proposal or press F to focus; Esc clears selection. Resource cleanup has improved, but no GPU performance gain is promised or measured.

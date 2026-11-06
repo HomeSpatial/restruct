@@ -1,12 +1,18 @@
-# 独立重建数据的导入与预检
+<a id="独立重建数据的导入与预检"></a>
 
-这些命令不需要 HomeSpatial 或 remap 安装。`reconstruction_description` / `reconstruction_bundle` 的版本保持 1；现有 `scene.json` 仍可使用，工具版本不变。
+# Import and preflight independent reconstruction data
 
-如果还没有可用输入，见 [COLMAP / RTAB-Map 数据准备](input-data.md)。`rtabmap-hloc` 的 SfM 描述只含相机、照片和报告；需要先由 remap 或其他上游补充稠密几何。此处的导入器消费原生文件和描述，不导入上游工具的 Python 包。
+[English](exchange-workflow.md) | [简体中文](exchange-workflow.zh-CN.md)
 
-## 从描述文件开始
+These commands do not require HomeSpatial or remap installations. `reconstruction_description` and `reconstruction_bundle` remain at version 1. Existing `scene.json` inputs still work, and the tool version is unchanged.
 
-在源码仓库根目录执行 `python -m pip install ".[geometry]"` 安装 Restruct 及几何依赖；当前尚未发布到 PyPI。输入可以是本地自包含描述，也可以通过 `--root 名称=目录` 绑定外部资产。`local/manifest` 是文档根的保留名称。
+If you do not yet have usable input, see [COLMAP / RTAB-Map input preparation](input-data.md). An `rtabmap-hloc` SfM description contains cameras, photos and reports only; remap or another upstream tool must first add dense geometry. This importer consumes native files and descriptions without importing upstream Python packages.
+
+<a id="从描述文件开始"></a>
+
+## Start from a description
+
+Run `python -m pip install ".[geometry]"` from the source repository root to install Restruct and geometry dependencies; this project is not yet released on PyPI. Input may be a local self-contained description or may bind external assets with `--root NAME=DIRECTORY`. `local/manifest` are reserved document-root names.
 
 ```bash
 restruct inspect result/reconstruction.json
@@ -16,67 +22,75 @@ restruct prepare imported/scene.json --profile handoff --preflight
 restruct prepare imported/scene.json --profile handoff --out job
 ```
 
-有多个几何时必须提供 `--geometry-asset ID`；有多个相机或图像资产时提供 `--sparse-asset ID` / `--images-asset ID`。bundle 子资产的 ID 为 `重建ID/资产ID`。不依赖 sfm/rgb/dense 等固定名称。`--no-photos` 显式只导入几何，不能与照片/帧选择同时使用。
+For multiple geometry assets, provide `--geometry-asset ID`. For multiple camera or image assets, provide `--sparse-asset ID` / `--images-asset ID`. Bundle child IDs use `reconstructionID/assetID`; no fixed names such as sfm/rgb/dense are assumed. `--no-photos` explicitly imports geometry alone and cannot be combined with photo/frame selection.
 
-当前适配器支持 PLY 点云、PLY/GLB 网格，以及 binary COLMAP＋照片。点云与网格按文件内容区分；照片按 COLMAP 相对文件名绑定。输入需要已声明右手坐标、朝上轴和公制尺度；相机与几何位于不同坐标时要求显式的 rigid/similarity 关系。未知格式仍可被独立格式校验器接受，但该消费入口会报告不支持。
+The adapter currently supports PLY point clouds, PLY/GLB meshes and binary COLMAP models with photos. It distinguishes meshes and point clouds by file content and binds photos by COLMAP relative filenames. Inputs must declare right-handed coordinates, an up axis and metric scale. Different camera/geometry coordinate systems require an explicit rigid/similarity relationship. The independent format validator may accept other formats, but this consumer reports them as unsupported.
 
-默认导入全部已声明且匹配的照片，无固定 3 帧限制，也不重新抽样。重复使用 `--frame-id COLMAP_ID` 可以选择准确子集。照片默认缩到长边不超过 768，并同步内参和去畸变；原生源照片、相机模型、坐标变换与质量报告保留。导入不会把源质量状态改为通过，`import.json` 保留来源摘要。
+By default, all declared, matching photos are imported without a fixed three-frame limit or additional frame sampling. Repeat `--frame-id COLMAP_ID` to select an exact subset. Photos are resized to a maximum long side of 768 by default, with matching intrinsics and undistortion updates. Native source photos, camera models, transforms and quality reports are retained. Import does not change source quality to passed; `import.json` preserves the provenance summary.
 
-## 坐标、采样和点来源
+<a id="坐标采样和点来源"></a>
 
-`prepare` 默认 `layout` 配置保留原有分析行为：已有 alignment 优先，否则估计工作朝向；2 cm voxel；有标定深度时优先 RGB-D。`--profile handoff` 使用 `alignment=preserve`，要求输入 +Z 朝上，并保留坐标方向与原点，单位仍按声明转换成米。其他朝上轴必须用已有变换或 `--alignment auto` 转换到工作 +Z。
+## Coordinates, sampling and point sources
 
-支持 `--alignment preserve|auto|existing_or_auto`、`--point-source auto|mesh|point_cloud|rgbd`、`--geometry-id`、`--voxel-m`。配置优先级是 profile → JSON `--config` → 显式 CLI 选项。2 cm 是布局分析的起点，可能重复采样，不能当成精度承诺。精细检查需要单独验证参数。
+The default `layout` profile preserves the existing `prepare` analysis behavior: prefer an existing alignment, otherwise estimate working orientation; use a 2 cm voxel and prefer calibrated RGB-D when available. `--profile handoff` uses `alignment=preserve`, requiring +Z-up input and preserving orientation and origin while still converting declared units to metres. Other up axes must be transformed to work +Z using an existing transform or `--alignment auto`.
 
-`prepare --preflight` 不创建 job，显示资产、点来源、帧名单、单位、朝上轴、对齐策略、采样参数和风险提示。它校验结构及引用文件；自动估计的实际矩阵在执行完成后写入 `prepared.json`。预检不会声称尚未运行的几何运算或推理质量已经通过。
+Options include `--alignment preserve|auto|existing_or_auto`, `--point-source auto|mesh|point_cloud|rgbd`, `--geometry-id` and `--voxel-m`. Precedence is profile → JSON `--config` → explicit CLI options. The 2 cm setting is a starting point for layout analysis, may resample already sampled data and is not an accuracy guarantee. Detailed inspection needs separately validated settings.
 
-## 创建任务与模型预检
+`prepare --preflight` does not create a job. It shows assets, point source, frame list, units, up axis, alignment policy, sampling settings and risks. It checks structure and referenced files; the actual automatically estimated matrix is written to `prepared.json` after execution. Preflight does not claim that unexecuted geometry operations or inference have passed quality checks.
+
+<a id="创建任务与模型预检"></a>
+
+## Create a task and preflight models
 
 ```bash
-# 直接接受新描述，导入并准备，同时生成下一步命令
+# Import and prepare a new description, generating next-step commands
 restruct init-task result/reconstruction.json --out task --runtime runtime.local.json --labels-file labels.json
-# 或暂时只启用布局模型，显式关闭对象检测
+# Or enable layout only for now and explicitly disable object detection
 restruct init-task result/reconstruction.json --out layout-task --runtime runtime.local.json --objects none
-# 使用任务内已解析的 runtime，先检查全部选中阶段
+# Use the task-resolved runtime and preflight every selected stage first
 restruct predict task/job --runtime task/runtime.local.json --labels-file labels.json --preflight
 restruct predict task/job --runtime task/runtime.local.json --labels-file labels.json
 ```
 
-`labels.json` 格式为 `{"labels":["chair","table"]}`；请按当前 Boxer 官方词表及任务范围提供真实类别。也可在 `runtime.boxer.labels_file` 配置，路径相对 runtime 文件解析。不会静默补造类别。相对源码/权重路径也以 runtime 文件为基准。
+`labels.json` has the form `{"labels":["chair","table"]}`. Provide real categories from the current Boxer vocabulary that fit the task. You may also configure `runtime.boxer.labels_file`, resolving relative to the runtime file. Categories are never silently invented. Relative source/weight paths also resolve from the runtime file.
 
-开始任何模型前先检查所有启用阶段的输入能力、解释器、源码、权重文件与类别配置；配置完整后分别用目标解释器检查原生 imports、CUDA/BF16 和 Boxer 词表。每个探针最长 45 秒，不构造模型、不下载权重。权重内容、显存能否容纳模型以及实际预测效果仍由执行检验。只有所有选中阶段预检通过才开始预测；输入不具备的阶段注明 skipped。
+Before any model starts, all enabled stages' data capabilities, interpreters, source, weight files and categories are checked. Once configuration is complete, the target interpreters probe native imports, CUDA/BF16 and the Boxer vocabulary. Each probe has a 45-second limit and neither constructs a model nor downloads weights. Weight contents, model VRAM requirements and prediction behavior are checked during actual execution. Prediction begins only after all selected stages pass preflight. Stages not supported by the input are marked skipped.
 
-`init-task` 始终保留可用的几何与证据；若推理缺配置，`startup.json.commands.predict` 为 null，`prediction_preflight.errors` 列出缺项，并生成可重复执行的 `predict_preflight` 命令。配置完整时生成的 predict 命令包含后端选择和标签文件绝对路径。
+`init-task` always retains usable geometry and evidence. If inference configuration is incomplete, `startup.json.commands.predict` is null, `prediction_preflight.errors` lists missing items, and a repeatable `predict_preflight` command is generated. When configuration is complete, the generated predict command includes backend selections and the absolute label-file path.
 
-所有新导入和任务必须使用新目录。`prepare/predict --resume` 继续沿用身份与内容哈希检查。输出摘要分别表示执行、数据、质量、下一步；完成导入或预测不等于结构/精度验收通过。
+Every new import/task needs a new directory. `prepare/predict --resume` retains identity and content-hash checks. Summaries distinguish execution, data, quality and next steps. Completing import or prediction does not establish structural or accuracy acceptance.
 
-## 维护与验证
+<a id="维护与验证"></a>
 
-独立格式的 `verify.py`、`exchange.py` 和 schema 由参考目录的 `vendor.py` 原样嵌入 `_exchange`，`SOURCE.json` 记录哈希；消费工具不从 HomeSpatial 路径导入。更新参考代码后同步，并使用 `vendor.py --target src/indoor_recon/_exchange --check` 检查一致性。
+## Maintenance and validation
 
-回归入口：`python -B -m unittest discover -s tests -v`。新交接测试覆盖任意资产 ID、多几何选择、点云类型、确切帧选择、相机 Sim3、预检无输出，以及缺少后续阶段配置时不启动前一模型。
+The independent format's `verify.py`, `exchange.py` and schemas are embedded unchanged into `_exchange` by the reference directory's `vendor.py`, with hashes in `SOURCE.json`. Consumers do not import from HomeSpatial paths. Synchronize reference updates and run `vendor.py --target src/indoor_recon/_exchange --check` to check consistency.
 
-## 自动追加同一个 bundle
+Run regression tests with `python -B -m unittest discover -s tests -v`. Handoff tests cover arbitrary asset IDs, multiple-geometry selection, point-cloud types, exact frame selection, camera Sim3, preflight without outputs and preventing an earlier model from starting when a later selected stage lacks configuration.
+
+<a id="自动追加同一个-bundle"></a>
+
+## Automatically append to one bundle
 
 ```bash
 restruct init-task --bundle house --runtime runtime.local.json
 restruct predict --bundle house
-# 中断后：恢复同一未发布的感知阶段，不重复已经完成的模型/帧
+# After interruption: resume the same unpublished stage without rerunning completed models/frames
 restruct predict --bundle house --resume
 restruct build authored-model.json --bundle house
 restruct bundle inspect house
 ```
 
-各命令自动选择唯一输入阶段、沿用 scene_id 并派生输出目录。--from 指定输入，--stage 指定新的阶段名。默认追加 prepared、perception、model，旧阶段禁止覆盖。runtime 首次传入后保存在 `.bundle/runtime.local.json`，后续不必重复；迁移主机请重新指定本机配置。类别文件可放在 runtime 的 boxer.labels_file 中。
+Commands automatically select a unique input stage, retain `scene_id` and derive output directories. `--from` selects the input; `--stage` names a new stage. Default stages are prepared, perception and model, and existing stages cannot be overwritten. The initial runtime is saved at `.bundle/runtime.local.json`, so it need not be repeated. Supply a new local configuration after changing hosts. The category file may be specified in runtime's `boxer.labels_file`.
 
-init-task 执行导入和预处理；predict 从已锁定的 prepared 快照复制新工作任务，不修改原快照。模型候选需检查/编辑成参数模型再 build；不会把候选自动视为验收通过。build 同时发布可编辑参数、原生工程、GLB 与依赖，明确记录 Z-up/Y-up 变换。构建成功仍不代表几何质量通过。
+`init-task` imports and prepares. `predict` copies a new working task from the locked prepared snapshot without modifying it. Review/edit proposals into a parameter model before `build`; proposals are not automatically accepted. `build` publishes editable parameters, the native project, GLB and dependencies with explicit Z-up/Y-up transforms. Build success is not geometric acceptance.
 
-`predict --bundle --resume` 要求工作目录内有本版本生成的 `prediction-run.json`；它核对场景、目标阶段、输入阶段及文档哈希、运行配置与类别文件哈希。未重新指定的 layout、objects、detect-type 沿用上次选择；自定义 `--stage/--out/--from` 仍需指向原任务。底层还会验证准备资产、照片、模型代码、权重和逐帧检查点。输入或设置变化应创建新阶段，旧版本没有恢复记录的目录不会被自动接管。
+`predict --bundle --resume` requires a `prediction-run.json` generated by this version in the working directory. It checks the scene, destination stage, input stage and document hash, runtime configuration and label-file hashes. Unspecified layout, objects and detect-type options retain their prior values. Custom `--stage/--out/--from` must still refer to the original task. Lower layers also check prepared assets, photos, model code, weights and per-frame checkpoints. Changed input/settings require a new stage. Old directories without resume records are not automatically adopted.
 
-同一预测输出只允许一个写入进程，进程退出后操作系统自动释放锁。恢复途中若快照复制曾中断，会保留 `exchange-interrupted-*` 副本并重新生成；若完整快照已保存而发布失败，则检查快照后直接重试发布，不启动模型。已发布阶段继续拒绝覆盖；残留的发布锁或未提交阶段目录仍按 bundle 发布器的错误提示检查，不能盲目删除。
+Only one process may write a prediction output at a time; the OS releases the lock when the process exits. If snapshot copying was interrupted, resume retains an `exchange-interrupted-*` copy and regenerates it. If a complete snapshot exists but publication failed, resume checks it and retries publication without starting models. Published stages still reject overwrites. Inspect residual publication locks or uncommitted stage directories according to publisher errors rather than blindly deleting them.
 
-模型工作进程和任务状态的 JSON 检查点采用唯一临时文件与原子替换。Windows access/sharing/lock 错误最多尝试 6 次，等待总计不超过 1.55 秒；其他错误立即返回。持续失败保留原检查点及临时文件，并在异常中记录位置；临时文件不会作为已完成单元或发布资产。更新 worker/适配器代码会使旧推理指纹失效，不会静默把旧代码结果当作新代码结果复用。
+Model-worker and task-state JSON checkpoints use unique temporary files and atomic replacement. Windows access/sharing/lock errors are retried at most six times, with at most 1.55 seconds total wait; other errors return immediately. Persistent failures preserve the original checkpoint and temporary file and report their locations. Temporary files are never treated as completed units or published assets. Updating worker/adapter code invalidates old inference fingerprints; old-code results are not silently reused as new-code results.
 
-如果仅发布失败，可用 `restruct bundle append house --result result/reconstruction.json --stage <new-id> --from <input-id> --operation <producer>` 发布已有成功结果，无需重复模型计算。该显式入口核验格式与完整性，结果是否成功由调用方确认。
+If only publication failed, use `restruct bundle append house --result result/reconstruction.json --stage <new-id> --from <input-id> --operation <producer>` to publish an existing successful result without rerunning models. This explicit entry point checks format and completeness; the caller must confirm that the result is successful.
 
-init-task 生成的后续命令也带有 bundle 关联；其 layout/objects 选择作为准备阶段默认值传给 predict，显式传入的 labels-file 会保存到本机运行配置，避免下一阶段再次填写。可用 predict 的参数明确覆盖这些选择。
+Next-step commands generated by `init-task` also retain bundle association. Its layout/objects choices become preparation-stage defaults for predict, and an explicit labels-file is saved in local runtime configuration to avoid reentering it. Predict arguments can explicitly override those selections.
