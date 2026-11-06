@@ -1,0 +1,6 @@
+{
+  "blender": {
+    "executable": "/absolute/path/to/blender",
+    "addon_dir": "/absolute/path/to/restruct/blender"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "hide_ids": [
+    "ceiling",
+    "wall-south"
+  ],
+  "direction_work": [
+    0.8,
+    -1,
+    1
+  ],
+  "resolution": [
+    480,
+    360
+  ],
+  "samples": 8
+}

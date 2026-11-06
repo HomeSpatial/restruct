@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "homespatial-restruct"
+version = "0.7.7"
+description = "Tools for turning indoor scans into editable, structured 3D scenes"
+readme = "README.md"
+license = "Apache-2.0 AND MIT"
+license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"]
+requires-python = ">=3.11"
+dependencies = ["numpy>=1.26,<3", "jsonschema>=4.21,<5", "Pillow>=10"]
+
+[project.urls]
+Homepage = "https://github.com/HomeSpatial/restruct"
+Repository = "https://github.com/HomeSpatial/restruct"
+Documentation = "https://github.com/HomeSpatial/restruct/tree/main/docs"
+Issues = "https://github.com/HomeSpatial/restruct/issues"
+
+[project.optional-dependencies]
+geometry = ["trimesh>=5.1,<6", "open3d>=0.20,<0.21", "scipy>=1.11,<2"]
+dev = ["build>=1.2", "twine>=6"]
+
+[project.scripts]
+restruct = "indoor_recon.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+indoor_recon = ["backends.json", "schemas/*.json", "_exchange/*.json", "viewer/static/**/*"]

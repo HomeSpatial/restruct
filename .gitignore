@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+runtime.local.json
+*.egg-info/
+.venv/
+build/
+dist/
+artifacts/
+
+# Local/private datasets and exported candidates never belong in source releases.
+private/
+public-release/
+.env
+.env.*
+!*.example
+*.pem
+*.key

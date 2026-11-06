@@ -1,0 +1,16 @@
+{
+  "spatiallm": {
+    "python": "/opt/envs/spatiallm/bin/python",
+    "source_dir": "/opt/backends/SpatialLM",
+    "model_dir": "/weights/spatiallm"
+  },
+  "boxer": {
+    "python": "/opt/envs/boxer/bin/python",
+    "source_dir": "/opt/backends/boxer",
+    "weights_dir": "/weights/boxer"
+  },
+  "blender": {
+    "executable": "/opt/blender/blender",
+    "addon_dir": "/opt/addons/homespatial_model"
+  }
+}

@@ -1,0 +1,14 @@
+include README.md LICENSE NOTICE THIRD_PARTY_NOTICES.md pyproject.toml
+recursive-include src/indoor_recon *.py *.json *.js *.html *.css LICENSE
+prune blender
+prune cases
+prune artifacts
+prune tests
+prune scripts
+prune skills
+prune containers
+prune docs
+prune config
+prune profiles
+prune .github
+global-exclude __pycache__ *.py[cod]

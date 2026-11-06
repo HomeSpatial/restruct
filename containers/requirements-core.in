@@ -1,0 +1,8 @@
+numpy==2.5.4
+jsonschema==4.26.0
+Pillow==13.0.0
+trimesh==5.1.1
+open3d==0.20.0
+scipy==1.18.1
+setuptools==84.2.1
+wheel==0.48.0

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><link rel="icon" href="data:,"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>空间重建 · 结果与证据</title>
+<link rel="stylesheet" href="./workspace.css">
+<style>
+:root{--bg:#0e1214;--panel:#151b1e;--panel2:#1b2327;--line:#ffffff14;--ink:#e6edeb;--mute:#8b9a97;--accent:#3fd0b6;--warn:#ffb547;--compare:#ff8a4c;
+ font:13px/1.45 "Microsoft YaHei UI","PingFang SC","Noto Sans SC",system-ui,sans-serif;color:var(--ink);color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);overflow:hidden}
+button,input,select{font:inherit;color:inherit}
+#app{display:grid;grid-template-columns:300px 1fr 320px;grid-template-rows:44px 1fr;height:100%}
+header{grid-column:1/4;display:flex;align-items:center;gap:14px;padding:0 14px;border-bottom:1px solid var(--line);background:var(--panel)}
+header h1{font-size:14px;margin:0;font-weight:700;letter-spacing:.5px;white-space:nowrap}
+#current{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mute)}
+#current b{color:var(--ink);font-weight:600}
+#stats{color:var(--mute);white-space:nowrap;font-variant-numeric:tabular-nums}
+aside{background:var(--panel);display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line)}
+aside.right{border-right:0;border-left:1px solid var(--line)}
+.search{margin:10px;padding:7px 10px;border-radius:7px;border:1px solid var(--line);background:var(--panel2);outline:none}
+.search:focus{border-color:var(--accent)}
+.scroll{flex:1;overflow:auto;min-height:0}
+.group{padding:10px 12px 4px;font-size:11px;color:var(--mute);letter-spacing:.5px;position:sticky;top:0;background:var(--panel);z-index:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.model{display:flex;gap:6px;align-items:flex-start;padding:6px 12px;cursor:pointer;border-left:2px solid transparent}
+.model:hover{background:var(--panel2)}
+.model.active{background:#3fd0b614;border-left-color:var(--accent)}
+.model.compare{border-left-color:var(--compare)}
+.model .main{flex:1;min-width:0}
+.model .p{word-break:break-all}
+.model .m{font-size:11px;color:var(--mute)}
+.model .cmp{opacity:0;font-size:11px;padding:1px 6px;border-radius:5px;border:1px solid var(--line);background:none;cursor:pointer;color:var(--mute)}
+.model:hover .cmp,.model.compare .cmp{opacity:1}
+.model.compare .cmp{color:var(--compare);border-color:var(--compare)}
+.hint{padding:10px 12px;color:var(--mute);font-size:12px}
+main{position:relative;min-width:0;min-height:0}
+canvas{display:block;width:100%;height:100%}
+#drop{position:absolute;inset:12px;border:2px dashed var(--accent);border-radius:14px;display:none;align-items:center;justify-content:center;font-size:18px;background:#0e1214cc;pointer-events:none}
+#drop.on{display:flex}
+#msg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:var(--mute);text-align:center;pointer-events:none;max-width:70%}
+#toolbar{position:absolute;left:12px;right:12px;bottom:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;pointer-events:none}
+#toolbar>*{pointer-events:auto}
+.btn{padding:6px 11px;border-radius:7px;border:1px solid var(--line);background:#151b1ee6;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:#ffffff38}
+.btn.on{border-color:var(--accent);color:var(--accent)}
+.slider{display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:7px;border:1px solid var(--line);background:#151b1ee6}
+.slider input[type=range]{width:130px;accent-color:var(--accent)}
+.slider label{display:flex;align-items:center;gap:4px;white-space:nowrap}
+.slider span{font-variant-numeric:tabular-nums;min-width:52px;color:var(--mute)}
+#compareBar{display:none}
+#compareBar.on{display:flex}
+#compareBar input{accent-color:var(--compare)}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tabs button{flex:1;padding:10px 0;background:none;border:0;border-bottom:2px solid transparent;cursor:pointer;color:var(--mute)}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
+.cats{display:flex;flex-wrap:wrap;gap:5px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.cat{padding:3px 8px;border-radius:12px;border:1px solid var(--line);cursor:pointer;font-size:12px;user-select:none}
+.cat.off{opacity:.4;text-decoration:line-through}
+.cat i{font-style:normal;color:var(--mute);margin-left:4px}
+.obj{padding:4px 12px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;gap:6px}
+.obj:hover{background:var(--panel2)}
+.obj.sel{background:#3fd0b622;color:var(--accent)}
+.obj.hidden{opacity:.4}
+.obj .c{color:var(--mute);font-size:11px;margin-left:auto;padding-left:8px}
+.info{padding:12px;overflow:auto}
+.info h3{margin:0 0 4px;font-size:14px;word-break:break-all}
+.info .sub{color:var(--mute);margin-bottom:12px}
+.info dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0 0 14px}
+.info dt{color:var(--mute);white-space:nowrap}
+.info dd{margin:0;word-break:break-all;font-variant-numeric:tabular-nums}
+.info .src{padding:8px 10px;border-radius:7px;background:var(--panel2);margin-bottom:6px;font-size:12px;word-break:break-all}
+.info .src b{color:var(--warn);font-weight:600;margin-right:6px}
+.info .sec{font-size:11px;color:var(--mute);letter-spacing:.5px;margin:14px 0 6px}
+.info pre{white-space:pre-wrap;word-break:break-all;font:11px/1.5 Consolas,monospace;background:var(--panel2);padding:8px;border-radius:7px;margin:0;max-height:240px;overflow:auto}
+.row{display:flex;gap:6px;margin-bottom:12px}
+kbd{font:11px Consolas,monospace;padding:0 4px;border:1px solid var(--line);border-radius:4px;color:var(--mute)}
+@media (max-width:1100px){#app{grid-template-columns:240px 1fr 260px}}
+#rev{position:absolute;left:18px;top:14px;display:none;pointer-events:none;text-shadow:0 1px 3px #000a}
+#rev.on{display:block}
+#rev .r{font-size:34px;font-weight:700;line-height:1.1;color:var(--accent);font-variant-numeric:tabular-nums}
+#rev .l1{font-size:14px;margin-top:2px;font-variant-numeric:tabular-nums}
+#rev .l2{font-size:13px;color:var(--mute);margin-top:2px}
+#rev .dots{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;max-width:60vw}
+#rev .dots i{font-style:normal;font-size:11px;padding:1px 6px;border-radius:9px;border:1px solid var(--line);color:var(--mute);background:#0e1214aa}
+#rev .dots i.on{color:var(--bg);background:var(--accent);border-color:var(--accent)}
+#rev .dots b{font-size:11px;font-weight:400;color:var(--warn);margin-left:6px}
+#rev .act{margin-top:8px;font-size:12px;line-height:1.6;color:var(--mute);font-variant-numeric:tabular-nums}
+#rev .act div:last-child{color:var(--ink)}#rev .act .fail{color:var(--warn)}
+.bare #app{grid-template-columns:1fr;grid-template-rows:1fr}
+.bare header,.bare aside,.bare #toolbar{display:none}
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three/three.module.min.js","three/addons/":"./vendor/three/addons/"}}</script>
+</head>
+<body>
+<div id="app">
+ <header><h1>空间重建</h1><div id="current">结果与证据</div><div id="stats"></div></header>
+ <aside>
+  <input id="filter" class="search" placeholder="筛选路径…（空格分隔多个关键词）">
+  <div id="models" class="scroll"></div>
+  <div class="hint">也可以把本地 .glb 拖进视图。<kbd>对比</kbd> 叠加第二个模型。</div>
+ </aside>
+ <main>
+  <canvas id="view"></canvas>
+  <div id="msg">从左侧选择一个模型</div>
+  <div id="drop">松开以加载 GLB</div>
+  <div id="rev"><div class="r"></div><div class="l1"></div><div class="l2"></div><div class="dots"></div><div class="act"></div></div>
+  <div id="toolbar">
+   <button class="btn" id="fit" title="F：聚焦选中对象">适配视图</button>
+   <button class="btn" id="top">俯视</button>
+   <button class="btn" id="wire">线框</button>
+   <button class="btn on" id="cutaway" title="隐藏挡在视点与观察中心之间的墙及其门窗；相机高于天花时隐藏天花">剖开墙体</button>
+   <button class="btn" id="cull" title="只渲染正面；适合扫描网格等单面模型，对有厚度的实体墙无效">背面剔除</button>
+   <div class="slider"><label><input type="checkbox" id="clipOn"> 剖切</label><input type="range" id="clip" step="0.01"><span id="clipVal"></span></div>
+   <div class="slider" id="compareBar"><span style="color:var(--compare);min-width:0">对比</span><input type="range" id="cmpOpacity" min="0" max="1" step="0.05" value="0.35"><label><input type="checkbox" id="cmpOrig"> 原材质</label><button class="btn" id="cmpClear" style="padding:2px 8px">移除</button></div>
+   <button class="btn" id="shot">截图</button>
+  </div>
+ </main>
+ <aside class="right">
+  <div class="tabs"><button class="on" data-tab="objects">对象</button><button data-tab="info">信息</button></div>
+  <div id="tab-objects" style="display:flex;flex-direction:column;min-height:0;flex:1">
+   <div id="cats" class="cats"></div>
+   <input id="objFilter" class="search" placeholder="筛选对象…">
+   <div id="objects" class="scroll"></div>
+  </div>
+  <div id="tab-info" class="info scroll" style="display:none"></div>
+ </aside>
+</div>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

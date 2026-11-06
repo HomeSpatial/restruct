@@ -1,0 +1,9 @@
+torch==2.8.0+cu128
+numpy==2.5.4
+opencv-python-headless==5.0.0.93
+tqdm==4.70.1
+dill==0.4.1
+scipy==1.18.1
+matplotlib==3.11.2
+Pillow==13.0.0
+setuptools==78.1.0

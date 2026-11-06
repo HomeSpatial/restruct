@@ -1,0 +1,16 @@
+HomeSpatial Structured Model
+Copyright 2026 Indoor Reconstruction contributors
+
+This Blender add-on and the original files under blender/ are licensed under
+the GNU General Public License, version 3 or (at your option) any later version.
+See LICENSE for the complete GPL version 3 text.
+
+This program is distributed WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+The packaged _vendor/scene_model.py is copied unchanged from the Apache-2.0
+core. It retains its Apache-2.0 license and SPDX header; see
+LICENSE-APACHE-2.0 and CORE-NOTICE in the add-on ZIP. Combining it with this
+add-on does not relicense that source file. The add-on as a whole is conveyed
+under GPL-3.0-or-later. The ZIP includes the complete add-on Python source;
+package_addon.py in the source distribution documents how to recreate it.

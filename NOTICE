@@ -1,0 +1,16 @@
+Restruct (formerly Indoor Reconstruction)
+Copyright 2026 Indoor Reconstruction contributors
+
+Original core source, schemas, documentation, scripts and skill resources are
+licensed under Apache-2.0, except where another license is explicitly stated.
+The Blender component under blender/ is GPL-3.0-or-later; see blender/LICENSE
+and blender/NOTICE. This license does not change licenses of external data,
+model weights or third-party software.
+
+The offline viewer bundles three.js under the MIT License. Its original
+copyright and license are retained at:
+src/indoor_recon/viewer/static/vendor/three/LICENSE
+
+The independently maintained reconstruction-description reference copied to
+src/indoor_recon/_exchange is part of this project's Apache-2.0 core grant.
+SOURCE.json retains its file hashes and origin metadata.

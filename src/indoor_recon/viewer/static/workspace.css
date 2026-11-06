@@ -1,0 +1,64 @@
+/* Task workspace: legacy GLB and process modes retain their existing controls. */
+.task-mode #app{grid-template-columns:var(--left-width,280px) minmax(0,1fr) var(--right-width,320px);grid-template-rows:52px 1fr}
+.task-mode header{gap:10px}
+.task-mode #filter,.task-mode #models,.task-mode aside>.hint,.task-mode .tabs,.task-mode #tab-objects,.task-mode #tab-info,.task-mode #rev{display:none!important}
+.task-mode aside{overflow:auto}
+.task-mode #toolbar{bottom:62px}
+.task-mode #toolbar .slider input[type=range]{width:90px}
+.task-mode #toolbar{gap:4px}
+.task-mode #toolbar .btn{padding:6px 8px}
+.workspace-panel{padding:16px;display:flex;flex-direction:column;gap:14px}
+.workspace-panel h2{font-size:11px;color:#a1b1b2;letter-spacing:1.5px;margin:0;text-transform:uppercase}
+.workspace-panel h3{font-size:14px;margin:0 0 8px}
+.workspace-panel select,.workspace-panel input[type=search]{width:100%;background:#20292d;border:1px solid #ffffff20;border-radius:8px;padding:8px;color:inherit;min-width:0;font:inherit}
+.workspace-panel input[type=range]{accent-color:#3fd0b6;width:100%;min-width:0}
+.workspace-panel label{display:flex;gap:8px;align-items:center}
+.workspace-panel button{cursor:pointer}
+.muted{color:#91a5a6;font-size:12px;line-height:1.65}
+.badge{font-size:10px;padding:2px 6px;border:1px solid #ffffff25;border-radius:4px;color:#b6c8c8;white-space:nowrap}
+.layer-card{border:1px solid #ffffff15;border-radius:10px;background:#1a2327;padding:10px 12px}
+.layer-card label strong{flex:1;font-size:13px}
+.layer-card small{display:block;color:#91a5a6;font-size:11px;margin:5px 0 8px}
+.layer-card input[type=checkbox]{accent-color:#3fd0b6}
+.layer-card .opacity{display:flex;gap:8px;align-items:center;color:#91a5a6;font-size:11px}
+.layer-card .opacity output{min-width:29px;text-align:right}
+.layer-card .opacity span{white-space:nowrap;flex-shrink:0}
+.layer-card .opacity input{flex:1;width:0}
+.workspace-panel label>select{flex:1;width:0}
+#w-boxer-controls label{margin:8px 0;white-space:nowrap}
+#w-boxer-controls input[type=range]{flex:1;width:0}
+#w-boxer-controls select{min-width:100px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--color);display:inline-block}
+.workspace-panel .segmented{display:flex;gap:5px;flex-wrap:wrap}
+.workspace-panel .segmented button{border:1px solid #ffffff20;background:#1c272b;padding:6px 9px;border-radius:6px;color:inherit;font:inherit}
+.workspace-panel .segmented button.on{border-color:#3fd0b6;color:#3fd0b6;background:#3fd0b612}
+#w-status{border-top:1px solid #ffffff12;padding-top:12px;white-space:pre-line}
+#w-list{max-height:36vh;overflow:auto;border-top:1px solid #ffffff12;padding-top:8px}
+.w-object{display:block;width:100%;text-align:left;border:0;background:none;color:inherit;border-radius:6px;padding:8px;font:inherit}
+.w-object:hover,.w-object.selected{background:#3fd0b619;color:#69e1cd}
+.w-object small{display:block;color:#8fa3a4;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.w-group summary{cursor:pointer;padding:7px 0;color:#d4e0df;font-size:12px}
+.w-group .w-object{padding-left:18px}
+#w-detail{border-top:1px solid #ffffff12;padding-top:14px}
+#w-detail h3{word-break:break-word}
+#w-back{margin-bottom:12px}
+#w-detail dl{display:grid;grid-template-columns:auto 1fr;gap:7px 10px;font-size:12px}
+#w-detail dt{color:#91a5a6}#w-detail dd{margin:0;word-break:break-word}
+#w-detail .notice{border-left:2px solid #f0b75d;padding:6px 10px;color:#d5bc92;background:#f0b75d08;font-size:12px;line-height:1.7}
+#w-photo{margin-top:12px;position:relative}#w-photo img{width:100%;height:auto;display:block;border-radius:6px}
+#w-photo svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#w-timeline{position:absolute;bottom:0;left:0;right:0;height:50px;display:flex;gap:10px;align-items:center;border-top:1px solid #ffffff15;background:#151b1ef5;padding:8px 14px;overflow:auto}
+#w-timeline select{background:#20292d;border:1px solid #ffffff20;border-radius:6px;color:inherit;padding:5px;max-width:220px}
+#w-timeline label{white-space:nowrap;font-size:12px;display:flex;gap:6px;align-items:center}
+#w-error{position:absolute;left:16px;top:16px;max-width:75%;background:#502c28ef;color:#ffe1d0;border-radius:8px;padding:10px 14px;display:none;white-space:pre-wrap;font-size:12px}
+.task-mode.left-closed #app{grid-template-columns:0 minmax(0,1fr) var(--right-width,320px)}
+.task-mode.right-closed #app{grid-template-columns:var(--left-width,280px) minmax(0,1fr) 0}
+.task-mode.left-closed.right-closed #app{grid-template-columns:0 1fr 0}
+.task-mode.left-closed aside:not(.right),.task-mode.right-closed aside.right{visibility:hidden}
+.task-mode .panel-toggle{font-size:12px;padding:5px 9px}
+.w-resize{position:absolute;top:0;bottom:50px;width:6px;cursor:col-resize;z-index:3;touch-action:none}
+.w-resize:hover,.w-resize:focus{background:#3fd0b644;outline:none}.w-resize.left{left:0}.w-resize.right{right:0}
+.left-closed .w-resize.left,.right-closed .w-resize.right{display:none}
+@media(max-width:1000px){.task-mode #app{grid-template-columns:var(--left-width,240px) minmax(0,1fr) var(--right-width,280px)}.task-mode #stats{display:none}}
+@media(max-width:760px){.task-mode #app{grid-template-columns:220px minmax(0,1fr) 0}.task-mode aside.right{visibility:hidden}.task-mode.left-closed #app{grid-template-columns:0 1fr 0}.task-mode.right-closed #app{grid-template-columns:0 minmax(0,1fr) 280px}.task-mode.right-closed aside.right{visibility:visible}.task-mode.right-closed aside:not(.right){visibility:hidden}}
+@media(max-width:760px){.w-resize{display:none}}

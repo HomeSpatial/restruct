@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "spatiallm": {
+    "repository": "https://github.com/manycore-research/SpatialLM",
+    "source_revision": "8913c44d84a450c53e9340b13317f8cf7144a738",
+    "model_repository": "manycore-research/SpatialLM1.1-Qwen-0.5B",
+    "model_revision": "b3ae9ad7a8689bc130a242c7f922a8cc290c1b59",
+    "model_sha256": "ed2e1ca161d9ca51342bdee27e801ff7aac4f6ef4b2585f530b7ba657ed8a827",
+    "python": "3.11",
+    "torch": "2.4.1+cu124"
+  },
+  "boxer": {
+    "repository": "https://github.com/facebookresearch/boxer",
+    "source_revision": "1f86542dc342a4b1d474c87c97c5d1d6566d9148",
+    "model_repository": "facebook/boxer",
+    "model_revision": "bfba91291fb3f137c18eb6e45362eeda827eac7b",
+    "python": "3.12",
+    "torch": "2.8.0+cu128",
+    "checkpoints": {
+      "boxer": "boxernet_hw960in2x6d768-c88128f8.ckpt",
+      "dinov3": "dinov3_vits16plus_pretrain_lvd1689m-4057cbaa.pth",
+      "owlv2": "owlv2-base-patch16-ensemble.pt"
+    },
+    "sha256": {
+      "boxer": "d5a30b348a8f5b0e5990ff3aa0e8f473ce77d860da22586322e7f47abc83ca6f",
+      "dinov3": "4057cbaaad8c16657adb09d6815f28d4164eeba30532fde23f0d17313124caea",
+      "owlv2": "14aa78ffe7b13e5b3ebf55845bc9a07e339a095cfd88f4c4e8f726b38ce1ebbf"
+    }
+  }
+}

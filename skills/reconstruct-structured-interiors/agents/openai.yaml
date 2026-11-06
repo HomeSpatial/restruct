@@ -1,0 +1,4 @@
+interface:
+  display_name: "室内结构化重建"
+  short_description: "从扫描和标定照片重建可编辑室内结构，并验证几何、材质与导出结果"
+  default_prompt: "使用 $reconstruct-structured-interiors，根据当前扫描、照片和已有模型完成室内结构化重建或局部修正，并按实际用途验证结果。"

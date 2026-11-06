@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://indoor-reconstruction.local/contracts/v1",
+  "oneOf": [
+    {"$ref": "#/$defs/scene"}, {"$ref": "#/$defs/frames"},
+    {"$ref": "#/$defs/alignment"}, {"$ref": "#/$defs/proposals"},
+    {"$ref": "#/$defs/model"}, {"$ref": "#/$defs/asset_lock"}
+  ],
+  "$defs": {
+    "id": {"type": "string", "minLength": 1},
+    "vec2": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+    "vec3": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3},
+    "positive3": {"type": "array", "items": {"type": "number", "exclusiveMinimum": 0}, "minItems": 3, "maxItems": 3},
+    "size3": {"type": "array", "items": {"type": "number", "minimum": 0}, "minItems": 3, "maxItems": 3},
+    "mat3": {"type": "array", "items": {"$ref": "#/$defs/vec3"}, "minItems": 3, "maxItems": 3},
+    "row4": {"type": "array", "items": {"type": "number"}, "minItems": 4, "maxItems": 4},
+    "mat4": {"type": "array", "items": {"$ref": "#/$defs/row4"}, "minItems": 4, "maxItems": 4},
+    "asset": {
+      "type": "object", "additionalProperties": false, "required": ["root", "path"],
+      "properties": {
+        "root": {"$ref": "#/$defs/id"}, "path": {"$ref": "#/$defs/id"},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "bytes": {"type": "integer", "minimum": 0}, "role": {"type": "string"}
+      }
+    },
+    "source": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "reference"],
+      "properties": {
+        "kind": {"enum": ["measurement", "prediction", "inference", "user", "legacy_record"]},
+        "reference": {"$ref": "#/$defs/asset"}, "record_id": {"type": "string"},
+        "frame_ids": {"type": "array", "items": {"$ref": "#/$defs/id"}, "uniqueItems": true},
+        "note": {"type": "string"}
+      }
+    },
+    "scene": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "kind", "scene_id", "source_coordinates", "geometry"],
+      "properties": {
+        "schema_version": {"const": 1}, "kind": {"const": "scene"}, "scene_id": {"$ref": "#/$defs/id"},
+        "source_coordinates": {
+          "type": "object", "additionalProperties": false, "required": ["handedness", "up_axis", "metres_per_unit"],
+          "properties": {
+            "handedness": {"const": "right"},
+            "up_axis": {"enum": ["+X", "-X", "+Y", "-Y", "+Z", "-Z", "unknown"]},
+            "metres_per_unit": {"type": ["number", "null"], "exclusiveMinimum": 0}
+          }
+        },
+        "geometry": {"type": "array", "items": {
+          "type": "object", "additionalProperties": false, "required": ["id", "type", "asset", "coordinate_frame", "has_color"],
+          "properties": {
+            "id": {"$ref": "#/$defs/id"}, "type": {"enum": ["mesh", "point_cloud"]},
+            "asset": {"$ref": "#/$defs/asset"}, "coordinate_frame": {"enum": ["source", "work"]},
+            "has_color": {"type": "boolean"}, "source": {"$ref": "#/$defs/source"}
+          }
+        }},
+        "frames": {"$ref": "#/$defs/asset"}, "alignment": {"$ref": "#/$defs/asset"},
+        "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}}
+      }
+    },
+    "camera": {
+      "type": "object", "additionalProperties": false,
+      "required": ["model", "axes", "pixel_convention", "K", "T_source_from_camera"],
+      "properties": {
+        "model": {"const": "pinhole_rectified"}, "axes": {"const": "x_right_y_down_z_forward"},
+        "pixel_convention": {"const": "top_left_integer_centres"},
+        "K": {"$ref": "#/$defs/mat3"}, "T_source_from_camera": {"$ref": "#/$defs/mat4"}
+      }
+    },
+    "frames": {
+      "type": "object", "additionalProperties": false, "required": ["schema_version", "kind", "scene_id", "frames"],
+      "properties": {
+        "schema_version": {"const": 1}, "kind": {"const": "frames"}, "scene_id": {"$ref": "#/$defs/id"},
+        "frames": {"type": "array", "items": {
+          "type": "object", "additionalProperties": false, "required": ["id", "size"],
+          "properties": {
+            "id": {"$ref": "#/$defs/id"},
+            "size": {"type": "array", "items": {"type": "integer", "minimum": 1}, "minItems": 2, "maxItems": 2},
+            "image": {"$ref": "#/$defs/asset"}, "camera": {"$ref": "#/$defs/camera"},
+            "depth": {
+              "type": "object", "additionalProperties": false, "required": ["asset", "metres_per_unit", "measurement"],
+              "properties": {
+                "asset": {"$ref": "#/$defs/asset"}, "metres_per_unit": {"type": "number", "exclusiveMinimum": 0},
+                "measurement": {"const": "camera_z"}, "invalid_value": {"type": "number"}
+              }
+            }, "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}}
+          }
+        }}
+      }
+    },
+    "alignment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "kind", "scene_id", "T_work_from_source_m", "method", "source"],
+      "properties": {
+        "schema_version": {"const": 1}, "kind": {"const": "alignment"}, "scene_id": {"$ref": "#/$defs/id"},
+        "T_work_from_source_m": {"$ref": "#/$defs/mat4"}, "method": {"type": "string"}, "source": {"$ref": "#/$defs/source"}
+      }
+    },
+    "obb": {
+      "type": "object", "additionalProperties": false, "required": ["type", "nature", "center_m", "size_m", "R_work_from_object"],
+      "properties": {
+        "type": {"const": "obb"}, "nature": {"enum": ["volume", "surface"]},
+        "center_m": {"$ref": "#/$defs/vec3"}, "size_m": {"$ref": "#/$defs/size3"}, "R_work_from_object": {"$ref": "#/$defs/mat3"}
+      }
+    },
+    "candidate": {
+      "type": "object", "additionalProperties": false, "required": ["id", "category", "geometry", "sources"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"}, "category": {"$ref": "#/$defs/id"}, "geometry": {"$ref": "#/$defs/obb"},
+        "scores": {"type": "object", "additionalProperties": {"type": "number"}},
+        "sources": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/source"}},
+        "floor_id": {"type": "string"}, "parent_id": {"type": "string"}
+      }
+    },
+    "proposals": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "kind", "scene_id", "coordinate_frame", "backend", "candidates"],
+      "properties": {
+        "schema_version": {"const": 1}, "kind": {"const": "proposals"}, "scene_id": {"$ref": "#/$defs/id"},
+        "coordinate_frame": {"const": "work_z_up_metres"}, "backend": {"$ref": "#/$defs/id"},
+        "candidates": {"type": "array", "items": {"$ref": "#/$defs/candidate"}}
+      }
+    },
+    "model_object": {
+      "type": "object", "additionalProperties": false, "required": ["id", "category", "geometry", "sources"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"}, "category": {"$ref": "#/$defs/id"},
+        "parent_id": {"type": "string"}, "host_id": {"type": "string"},
+        "sources": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/source"}},
+        "geometry": {"oneOf": [
+          {"type": "object", "additionalProperties": false, "required": ["type", "size_m", "T_work_from_object"],
+           "properties": {"type": {"const": "box"}, "size_m": {"$ref": "#/$defs/positive3"}, "T_work_from_object": {"$ref": "#/$defs/mat4"}}},
+          {"type": "object", "additionalProperties": false, "required": ["type", "boundary_m", "T_work_from_object"],
+           "properties": {"type": {"const": "polygon_surface"}, "boundary_m": {"type": "array", "minItems": 3, "items": {"$ref": "#/$defs/vec2"}},
+            "holes_m": {"type": "array", "items": {"type": "array", "minItems": 3, "items": {"$ref": "#/$defs/vec2"}}}, "T_work_from_object": {"$ref": "#/$defs/mat4"}}},
+          {"type": "object", "additionalProperties": false, "required": ["type", "asset", "T_work_from_object"],
+           "properties": {"type": {"const": "mesh_reference"}, "asset": {"$ref": "#/$defs/asset"}, "T_work_from_object": {"$ref": "#/$defs/mat4"}}},
+          {"type": "object", "additionalProperties": false, "required": ["type", "children"],
+           "properties": {"type": {"const": "assembly"}, "children": {"type": "array", "items": {"$ref": "#/$defs/id"}, "uniqueItems": true}}}
+        ]}
+      }
+    },
+    "model": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "kind", "scene_id", "coordinate_frame", "objects"],
+      "properties": {
+        "schema_version": {"const": 1}, "kind": {"const": "model"}, "scene_id": {"$ref": "#/$defs/id"},
+        "coordinate_frame": {"const": "work_z_up_metres"}, "objects": {"type": "array", "items": {"$ref": "#/$defs/model_object"}}
+      }
+    },
+    "asset_lock": {
+      "type": "object", "additionalProperties": false, "required": ["schema_version", "kind", "scene_id", "files"],
+      "properties": {
+        "schema_version": {"const": 1}, "kind": {"const": "asset_lock"}, "scene_id": {"$ref": "#/$defs/id"},
+        "files": {"type": "array", "minItems": 1, "items": {"allOf": [{"$ref": "#/$defs/asset"}, {"required": ["sha256", "bytes"]}]}}
+      }
+    }
+  }
+}
