@@ -72,9 +72,9 @@ class StartupTests(unittest.TestCase):
         self.assertEqual(sha256(self.runtime),runtime_before)
         self.assertFalse((out/"model.blend").exists())
         self.assertIn("## 问题表",(out/"STATE.md").read_text(encoding="utf-8"))
-        self.assertEqual(startup["commands"]["residuals_prefix"][-2:],["--startup",str(out/"startup.json")])
+        self.assertEqual(startup["commands"]["residuals_prefix"][-2:],["--startup",str((out/"startup.json").resolve())])
         self.assertIn("check-materials", startup["commands"]["check_materials_prefix"])
-        self.assertIn(f"{startup['task_root_name']}={out}", startup["commands"]["check_materials_prefix"])
+        self.assertIn(f"{startup['task_root_name']}={out.resolve()}", startup["commands"]["check_materials_prefix"])
         query=self.root/"query.json";self.write(query,{"op":"pixel_rays","frame_id":"81","pixels":[[16,12]]})
         command=[*startup["commands"]["evidence_prefix"],str(query),"--out",str(self.root/"query-result")]
         env=dict(os.environ,PYTHONPATH=str(Path(__file__).resolve().parents[1]/"src"),PYTHONDONTWRITEBYTECODE="1")

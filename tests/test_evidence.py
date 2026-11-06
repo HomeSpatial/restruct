@@ -54,7 +54,7 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(row["frame_id"], "one")
         self.assertEqual(row["scan_first_hit_points_in_bounds"], len(self.points))
         self.assertGreater(row["projected_area_px2"], 2000)
-        self.assertIn(str(self.prepared/"frame.npz"), self.evidence.inputs)
+        self.assertIn(str((self.prepared/"frame.npz").resolve()), self.evidence.inputs)
 
     def test_crop_preserves_pixel_ray_and_pins_source_image(self):
         out = self.root / "crop"

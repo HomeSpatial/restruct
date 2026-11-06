@@ -77,8 +77,8 @@ class WorkspaceTests(unittest.TestCase):
         description = ws.describe(viewer, '@clean')
         self.assertEqual(description['revisions'][0]['path'], '@clean/build-r9/model.glb')
         self.assertEqual(description['layers']['boxer']['status'], 'complete')
-        self.assertEqual(ws.photo_asset(viewer, '@clean', 'frame-a'), self.assets/'photo.png')
-        self.assertEqual(resolve_model_file(viewer, '@clean/build-r9/model.glb'), build/'model.glb')
+        self.assertEqual(ws.photo_asset(viewer, '@clean', 'frame-a'), (self.assets/'photo.png').resolve())
+        self.assertEqual(resolve_model_file(viewer, '@clean/build-r9/model.glb'), (build/'model.glb').resolve())
         self.assertIsNone(resolve_model_file(viewer, '@clean/../declared-assets/photo.png'))
         self.assertIsNone(resolve_model_file(viewer, '@unknown/build-r9/model.glb'))
         self.assertIsNone(resolve_model_dir(viewer, '@clean/..'))
@@ -95,7 +95,7 @@ class WorkspaceTests(unittest.TestCase):
         frame = ws.frame_data(self.root, 'task', 'frame-a')
         self.assertEqual(frame['detections'][0]['box2d_native'], [10, 40, 20, 80])
         self.assertNotIn('obb_data', frame['detections'][0])
-        self.assertEqual(ws.photo_asset(self.root, 'task', 'frame-a'), self.assets/'photo.png')
+        self.assertEqual(ws.photo_asset(self.root, 'task', 'frame-a'), (self.assets/'photo.png').resolve())
 
     def test_unavailable_registered_task_does_not_hide_healthy_tasks(self):
         broken = self.root/'broken'
@@ -160,7 +160,7 @@ class WorkspaceTests(unittest.TestCase):
                 metres_per_unit=.001, T_work_from_source_m=transform))
         (self.task/'evidence.json').write_text(json.dumps(evidence))
         path, spec = ws.scan_asset(self.root, 'task')
-        self.assertEqual(path, self.assets/'scan.glb')
+        self.assertEqual(path, (self.assets/'scan.glb').resolve())
         self.assertEqual(spec['transform'], transform)
         self.assertEqual(spec['scale'], .001)
         self.assertFalse(spec['sampled'])

@@ -43,7 +43,7 @@ class BackendTests(unittest.TestCase):
         runtime = self.root/'runtime.local.json'
         atomic_json(runtime, {'boxer': dict(self.runtime['boxer'], weights_dir='weights', checkpoints={'boxer': 'renamed.ckpt'})})
         binding = _runtime(runtime)['boxer']
-        self.assertEqual(boxer_checkpoints(binding)['boxer'], custom)
+        self.assertEqual(boxer_checkpoints(binding)['boxer'], custom.resolve())
         cache = private_boxer_weights(binding, self.root/'cache')
         self.assertEqual((cache/BOXER_CHECKPOINTS['boxer']).read_bytes(), custom.read_bytes())
         self.assertTrue(custom.is_file())
@@ -94,10 +94,10 @@ class BackendTests(unittest.TestCase):
         out = self.root/'wsl-check'
         def worker(command, **kwargs):
             self.assertEqual(command[:4], ['wsl.exe', '-d', 'Fixture', '--'])
-            self.assertEqual(command[-1], wsl_path(out/'spatiallm/request.local.json'))
+            self.assertEqual(command[-1], wsl_path((out/'spatiallm/request.local.json').resolve()))
             request = json.loads((out/'spatiallm/request.local.json').read_text())
-            self.assertEqual(request['source_dir'], wsl_path(self.source))
-            self.assertEqual(request['model_dir'], wsl_path(self.weights))
+            self.assertEqual(request['source_dir'], wsl_path(self.source.resolve()))
+            self.assertEqual(request['model_dir'], wsl_path(self.weights.resolve()))
             self.assertNotIn('shell', kwargs)
             kwargs['stdout'].write('RECON_PROBE={"passed":true,"verified_level":"imports"}\n')
             return SimpleNamespace(returncode=0)

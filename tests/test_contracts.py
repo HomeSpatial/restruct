@@ -178,7 +178,7 @@ class ContractTests(unittest.TestCase):
         asset = {"root": "scan", "path": "rgb/1.png"}
         with tempfile.TemporaryDirectory() as temp:
             target = resolve_asset(asset, {"scan": Path(temp) / "relocated"})
-            self.assertEqual(target, Path(temp) / "relocated/rgb/1.png")
+            self.assertEqual(target, (Path(temp) / "relocated/rgb/1.png").resolve())
         for name in ("../scan.ply", "/scan.ply", "C:/scan.ply", "rgb\\1.png"):
             with self.subTest(name=name), self.assertRaises(ContractError):
                 resolve_asset({"root": "scan", "path": name}, {"scan": Path.cwd()})
